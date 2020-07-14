@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Graphology</string>
+    <string name="what_to_upload_header">WHAT TO UPLOAD</string>
+    <string name="what_to_upload_content">\u2022 Write the below lines on 3 white sheets of paper separately\n
+\u2022 \"Time is ticking. It does not stop for anyone\"\n
+\u2022 \"Yesterday is history, tomorrow is a mystery, but today is a gift.\"\n
+\u2022 \"That is why it is called the present.\"\n
+\u2022 Click a picture of all the three writings and upload it as three separate images!</string>
+    <string name="preferred_content">\u2022 Writing with a black pen\n
+\u2022 Writing that is captured so that text is centered in the image</string>
+    <string name="supported_format_content">\u2022 Supported formats: png, jpg, jpeg and pdf</string>
+    <string name="what_you_get_content">A personality analysis by the Graphology Tool!</string>
+</resources>

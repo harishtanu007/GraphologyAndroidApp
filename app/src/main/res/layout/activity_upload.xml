@@ -4,158 +4,129 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/parentLayout"
     tools:context=".UploadActivity">
+
     <TextView
         android:id="@+id/textview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Upload Images"
+        android:text="Your unique key is: \n (Unique key representing your handwriting sample)"
         android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/r_layout1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        />
 
-    <RelativeLayout
+    <TextView
+        android:id="@+id/uniqueIDView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="24sp"
+        app:layout_constraintTop_toBottomOf="@+id/textview"
+         />
+
+    <TextView
+        android:id="@+id/textview2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Select the handwriting sample image to upload:"
+        android:textSize="24sp"
+        app:layout_constraintTop_toBottomOf="@+id/uniqueIDView"/>
+
+    <LinearLayout
         android:id="@+id/r_layout1"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_row="0"
-        android:layout_rowWeight="1"
-        android:layout_column="0"
-        android:layout_columnWeight="1"
-        android:background="@drawable/background_border"
-        android:padding="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/r_layout3"
-        app:layout_constraintEnd_toStartOf="@+id/r_layout2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textview">
+        android:background="@drawable/background_border"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="15dp"
+        app:layout_constraintTop_toBottomOf="@+id/textview2">
 
         <ImageView
             android:id="@+id/imageviewMain1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:visibility="gone"
+            android:layout_gravity="start|left"
+            android:src="@mipmap/ic_launcher" />
 
-        <ImageButton
-            android:id="@+id/but1"
+        <TextView
+            android:id="@+id/filename1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@android:color/transparent"
-            android:gravity="center"
-            android:src="@drawable/add"
-            android:text="upload image" />
+            android:layout_margin="16dp"
+            android:singleLine="true"
+            android:text="Upload Image 1"
+            android:textSize="26dp"/>
+    </LinearLayout>
 
-    </RelativeLayout>
-
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/r_layout2"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_row="1"
-        android:layout_rowWeight="1"
-        android:layout_column="0"
-        android:layout_columnWeight="1"
-        android:background="@drawable/background_border"
-        android:padding="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/r_layout4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/r_layout1"
-        app:layout_constraintTop_toBottomOf="@+id/textview">
-
-        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/imageviewMain2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <ImageButton
-            android:id="@+id/but2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@android:color/transparent"
-            android:gravity="center"
-            android:src="@drawable/add"
-            />
-
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/r_layout3"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_row="0"
-        android:layout_rowWeight="1"
-        android:layout_column="1"
-        android:layout_columnWeight="1"
         android:background="@drawable/background_border"
+        android:gravity="center"
+        android:orientation="horizontal"
         android:padding="15dp"
-        android:layout_gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/button2"
-        app:layout_constraintEnd_toStartOf="@+id/r_layout2"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/r_layout1">
 
-        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/imageviewMain3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/imageviewMain2"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="start|left"
+            android:visibility="gone"
+            android:src="@mipmap/ic_launcher" />
 
-        <ImageButton
-            android:id="@+id/but3"
+        <TextView
+            android:id="@+id/filename2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@android:color/transparent"
-            android:gravity="center"
-            android:src="@drawable/add" />
+            android:layout_margin="16dp"
+            android:singleLine="true"
+            android:text="Upload Image 2"
+            android:textSize="26dp" />
+    </LinearLayout>
 
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/r_layout4"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_row="1"
-        android:layout_rowWeight="1"
-        android:layout_column="1"
-        android:layout_columnWeight="1"
-        android:background="@drawable/background_border"
-        android:padding="15dp"
+    <LinearLayout
+        android:id="@+id/r_layout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:layout_constraintBottom_toTopOf="@+id/button2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/r_layout3"
+        android:background="@drawable/background_border"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="15dp"
         app:layout_constraintTop_toBottomOf="@+id/r_layout2">
 
-        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/imageviewMain4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/imageviewMain3"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:visibility="gone"
+            android:layout_gravity="start|left"
+            android:src="@mipmap/ic_launcher" />
 
-        <ImageButton
-            android:id="@+id/but4"
+        <TextView
+            android:id="@+id/filename3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@android:color/transparent"
-            android:gravity="center"
-            android:src="@drawable/add" />
+            android:layout_margin="16dp"
+            android:singleLine="true"
+            android:text="Upload Image 3"
+            android:textSize="26dp" />
+    </LinearLayout>
 
-    </RelativeLayout>
 
     <Button
         android:id="@+id/button2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Upload"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/r_layout4"
-        app:layout_constraintStart_toStartOf="@+id/r_layout3"
-        />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

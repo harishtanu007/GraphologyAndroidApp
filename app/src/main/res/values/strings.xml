@@ -10,4 +10,10 @@
 \u2022 Writing that is captured so that text is centered in the image</string>
     <string name="supported_format_content">\u2022 Supported formats: png, jpg, jpeg and pdf</string>
     <string name="what_you_get_content">A personality analysis by the Graphology Tool!</string>
+    <string name="dialog_permission_title">Grant Permissions</string>
+    <string name="dialog_permission_message">This app needs permission to use this feature. You can grant them in app settings.</string>
+    <string name="toast_image_intent_null">Image picker option is missing!</string>
+    <string name="go_to_settings">GOTO SETTINGS</string>
+    <string name="lbl_take_camera_picture">Take a picture</string>
+    <string name="lbl_choose_from_gallery">Choose from gallery</string>
 </resources>

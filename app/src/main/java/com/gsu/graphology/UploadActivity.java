@@ -17,8 +17,10 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,16 +30,41 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.Snackbar;
+import com.gsu.graphology.model.MySingleton;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 
 public class UploadActivity extends AppCompatActivity {
@@ -59,6 +86,18 @@ public class UploadActivity extends AppCompatActivity {
     private LinearLayout layout3;
     private TextView uniqueID;
     private String uniqueIDText;
+    private Button uploadBtn;
+    private Bitmap bitmap1;
+    private Bitmap bitmap2;
+    private Bitmap bitmap3;
+    private String imagePath1;
+    private String imagePath2;
+    private String imagePath3;
+    private String imageName1;
+    private String imageName2;
+    private String imageName3;
+
+    private String UploadURL = "";
 
 
     @Override
@@ -74,13 +113,18 @@ public class UploadActivity extends AppCompatActivity {
         layout1 = findViewById(R.id.r_layout1);
         layout2 = findViewById(R.id.r_layout2);
         layout3 = findViewById(R.id.r_layout3);
-        uniqueID=findViewById(R.id.uniqueIDView);
+        uniqueID = findViewById(R.id.uniqueIDView);
+        uploadBtn = findViewById(R.id.upload_btn);
         getSupportActionBar().setTitle("Upload Images");
         Intent intent = getIntent();
         email = intent.getStringExtra("emailID");
         uniqueIDText = intent.getStringExtra("uniqueID");
 
+
         uniqueID.setText(uniqueIDText);
+
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
 
         loadProfileDefault();
         // Clearing older images from cache directory
@@ -106,15 +150,141 @@ public class UploadActivity extends AppCompatActivity {
                 onImageClick(REQUEST_IMAGE3);
             }
         });
+        uploadBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Map<String, String> params = new HashMap<String, String>(2);
+                params.put("email", email);
+                params.put("uniquekey", uniqueIDText);
+                Log.e("image path link", "/storage/emulated/0/DCIM/Camera/IMG_20200711_173019.jpg");
+                String result = multipartRequest("https://graphology.eastus.azurecontainer.io/graphology/Applied", params, "/storage/emulated/0/DCIM/Camera/IMG_20200711_173019.jpg", "file", "image/jpg");
+                Log.e("result", result);
+            }
+        });
+    }
+
+
+    public String multipartRequest(String urlTo, Map<String, String> parmas, String filepath, String filefield, String fileMimeType) {
+        Log.e("path", filepath);
+        HttpURLConnection connection = null;
+        DataOutputStream outputStream = null;
+        InputStream inputStream = null;
+
+        String twoHyphens = "--";
+        String boundary = "*****" + Long.toString(System.currentTimeMillis()) + "*****";
+        String lineEnd = "\r\n";
+
+        String result = "";
+
+        int bytesRead, bytesAvailable, bufferSize;
+        byte[] buffer;
+        int maxBufferSize = 1 * 1024 * 1024;
+
+        String[] q = filepath.split("/");
+        int idx = q.length - 1;
+
+        try {
+            File file = new File(filepath);
+            FileInputStream fileInputStream = new FileInputStream(file);
+
+            URL url = new URL(urlTo);
+            connection = (HttpURLConnection) url.openConnection();
+
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setUseCaches(false);
+
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Connection", "Keep-Alive");
+            connection.setRequestProperty("User-Agent", "Android Multipart HTTP Client 1.0");
+            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            outputStream = new DataOutputStream(connection.getOutputStream());
+            outputStream.writeBytes(twoHyphens + boundary + lineEnd);
+            outputStream.writeBytes("Content-Disposition: form-data; name=\"" + filefield + "\"; filename=\"" + q[idx] + "\"" + lineEnd);
+            outputStream.writeBytes("Content-Type: " + fileMimeType + lineEnd);
+            outputStream.writeBytes("Content-Transfer-Encoding: binary" + lineEnd);
+
+            outputStream.writeBytes(lineEnd);
+
+            bytesAvailable = fileInputStream.available();
+            bufferSize = Math.min(bytesAvailable, maxBufferSize);
+            buffer = new byte[bufferSize];
+
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            while (bytesRead > 0) {
+                outputStream.write(buffer, 0, bufferSize);
+                bytesAvailable = fileInputStream.available();
+                bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            }
+
+            outputStream.writeBytes(lineEnd);
+
+            // Upload POST Data
+            Iterator<String> keys = parmas.keySet().iterator();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                String value = parmas.get(key);
+
+                outputStream.writeBytes(twoHyphens + boundary + lineEnd);
+                outputStream.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"" + lineEnd);
+                outputStream.writeBytes("Content-Type: text/plain" + lineEnd);
+                outputStream.writeBytes(lineEnd);
+                outputStream.writeBytes(value);
+                outputStream.writeBytes(lineEnd);
+            }
+
+            outputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+
+
+            if (200 != connection.getResponseCode()) {
+                Log.e("Debug", "error: ");
+            }
+
+            inputStream = connection.getInputStream();
+
+            result = this.convertStreamToString(inputStream);
+
+            fileInputStream.close();
+            inputStream.close();
+            outputStream.flush();
+            outputStream.close();
+
+            return result;
+        } catch (Exception e) {
+            Log.e("Debug", "error: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private String convertStreamToString(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String line = null;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
     }
 
     private void loadProfile(String url, int REQUEST_IMAGE) {
-        Log.d(TAG, "Image cache path: " + url);
 
 
         if (REQUEST_IMAGE == REQUEST_IMAGE1) {
-            filename1.setText(url.substring( url.lastIndexOf('/')+1, url.length() ));
-
+            imageName1 = url.substring(url.lastIndexOf('/') + 1, url.length());
+            filename1.setText(url.substring(url.lastIndexOf('/') + 1, url.length()));
             imgView1.setVisibility(View.VISIBLE);
             Glide.with(this).load(url)
                     .into(imgView1);
@@ -122,14 +292,16 @@ public class UploadActivity extends AppCompatActivity {
 
         }
         if (REQUEST_IMAGE == REQUEST_IMAGE2) {
-            filename2.setText(url.substring( url.lastIndexOf('/')+1, url.length() ));
+            imageName2 = url.substring(url.lastIndexOf('/') + 1, url.length());
+            filename2.setText(url.substring(url.lastIndexOf('/') + 1, url.length()));
             imgView2.setVisibility(View.VISIBLE);
             Glide.with(this).load(url)
                     .into(imgView2);
             imgView2.setColorFilter(ContextCompat.getColor(this, android.R.color.transparent));
         }
         if (REQUEST_IMAGE == REQUEST_IMAGE3) {
-            filename3.setText(url.substring( url.lastIndexOf('/')+1, url.length() ));
+            imageName3 = url.substring(url.lastIndexOf('/') + 1, url.length());
+            filename3.setText(url.substring(url.lastIndexOf('/') + 1, url.length()));
             imgView3.setVisibility(View.VISIBLE);
             Glide.with(this).load(url)
                     .into(imgView3);
@@ -214,11 +386,15 @@ public class UploadActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE1) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri uri = data.getParcelableExtra("path");
+                //imagePath1 = ImageFilePath.getPath(UploadActivity.this, data.getData());
                 try {
                     // You can update this bitmap to your server
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                    bitmap1 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
+
+                    //Log.e("image path", imagePath1);
                     loadProfile(uri.toString(), REQUEST_IMAGE1);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -229,8 +405,9 @@ public class UploadActivity extends AppCompatActivity {
                 Uri uri = data.getParcelableExtra("path");
                 try {
                     // You can update this bitmap to your server
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                    bitmap2 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
+                    imagePath2 = uri.toString();
                     loadProfile(uri.toString(), REQUEST_IMAGE2);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -242,9 +419,11 @@ public class UploadActivity extends AppCompatActivity {
                 Uri uri = data.getParcelableExtra("path");
                 try {
                     // You can update this bitmap to your server
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                    bitmap3 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
+                    imagePath3 = uri.toString();
                     loadProfile(uri.toString(), REQUEST_IMAGE3);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

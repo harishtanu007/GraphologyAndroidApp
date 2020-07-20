@@ -60,7 +60,13 @@ public class EmailActivity extends AppCompatActivity {
         submitEmailBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkEmail(v);
+                if(!emailAddressInput.getText().toString().isEmpty()) {
+                    checkEmail(v);
+                }
+                else
+                {
+                    Snackbar.make(findViewById(R.id.parentLayout), "Please enter email ID", Snackbar.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -92,7 +98,7 @@ public class EmailActivity extends AppCompatActivity {
              */
 
             dialog = new ProgressDialog(EmailActivity.this);
-            dialog.setTitle("Hey Wait Please..." + x);
+            dialog.setTitle("Please wait");
             dialog.setMessage("Checking your details");
             dialog.show();
         }

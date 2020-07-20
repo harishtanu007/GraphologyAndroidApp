@@ -87,7 +87,6 @@ public class ImagePickerActivity extends AppCompatActivity {
     public static void showImagePickerOptions(final Context context, final PickerOptionListener listener) {
         // setup the alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(context.getString(R.string.what_to_upload_header));
 
         // add a list
         final String[] animals = {context.getString(R.string.lbl_take_camera_picture), context.getString(R.string.lbl_choose_from_gallery)};
@@ -198,7 +197,7 @@ public class ImagePickerActivity extends AppCompatActivity {
         // applying UI theme
         options.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         options.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
-        options.setToolbarWidgetColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        options.setToolbarWidgetColor(ContextCompat.getColor(this, R.color.white));
 
         if (lockAspectRatio)
             options.withAspectRatio(ASPECT_RATIO_X, ASPECT_RATIO_Y);

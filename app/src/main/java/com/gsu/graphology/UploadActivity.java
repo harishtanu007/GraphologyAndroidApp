@@ -5,10 +5,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -39,6 +42,9 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 import com.gsu.graphology.model.MySingleton;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
@@ -60,11 +66,28 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okio.Buffer;
+import okio.BufferedSource;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Header;
+import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
+import retrofit2.http.POST;
+import retrofit2.http.Part;
 
 
 public class UploadActivity extends AppCompatActivity {
@@ -84,6 +107,7 @@ public class UploadActivity extends AppCompatActivity {
     private LinearLayout layout1;
     private LinearLayout layout2;
     private LinearLayout layout3;
+    private ConstraintLayout constraintLayout;
     private TextView uniqueID;
     private String uniqueIDText;
     private Button uploadBtn;
@@ -96,6 +120,11 @@ public class UploadActivity extends AppCompatActivity {
     private String imageName1;
     private String imageName2;
     private String imageName3;
+
+    ProgressDialog progressDialog;
+    String URL = "http://graphology.eastus.azurecontainer.io/graphology/Applied";
+
+    private String baseUrl;
 
     private String UploadURL = "";
 
@@ -115,10 +144,13 @@ public class UploadActivity extends AppCompatActivity {
         layout3 = findViewById(R.id.r_layout3);
         uniqueID = findViewById(R.id.uniqueIDView);
         uploadBtn = findViewById(R.id.upload_btn);
+        constraintLayout=findViewById(R.id.parentLayout);
         getSupportActionBar().setTitle("Upload Images");
         Intent intent = getIntent();
         email = intent.getStringExtra("emailID");
         uniqueIDText = intent.getStringExtra("uniqueID");
+
+        baseUrl = "http://graphology.eastus.azurecontainer.io";
 
 
         uniqueID.setText(uniqueIDText);
@@ -153,131 +185,114 @@ public class UploadActivity extends AppCompatActivity {
         uploadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Map<String, String> params = new HashMap<String, String>(2);
-                params.put("email", email);
-                params.put("uniquekey", uniqueIDText);
-                Log.e("image path link", "/storage/emulated/0/DCIM/Camera/IMG_20200711_173019.jpg");
-                String result = multipartRequest("https://graphology.eastus.azurecontainer.io/graphology/Applied", params, "/storage/emulated/0/DCIM/Camera/IMG_20200711_173019.jpg", "file", "image/jpg");
-                Log.e("result", result);
+                if(imagePath1!=null && imagePath2!=null && imagePath3!=null) {
+                    uploadToServer();
+                }
+                else {
+                    Snackbar.make(findViewById(R.id.parentLayout), "Please select 3 images", Snackbar.LENGTH_SHORT).show();
+                }
             }
         });
     }
 
+    public static class NetworkClient {
 
-    public String multipartRequest(String urlTo, Map<String, String> parmas, String filepath, String filefield, String fileMimeType) {
-        Log.e("path", filepath);
-        HttpURLConnection connection = null;
-        DataOutputStream outputStream = null;
-        InputStream inputStream = null;
+        private static final String BASE_URL = "http://graphology.eastus.azurecontainer.io/";
+        private static Retrofit retrofit;
 
-        String twoHyphens = "--";
-        String boundary = "*****" + Long.toString(System.currentTimeMillis()) + "*****";
-        String lineEnd = "\r\n";
-
-        String result = "";
-
-        int bytesRead, bytesAvailable, bufferSize;
-        byte[] buffer;
-        int maxBufferSize = 1 * 1024 * 1024;
-
-        String[] q = filepath.split("/");
-        int idx = q.length - 1;
-
-        try {
-            File file = new File(filepath);
-            FileInputStream fileInputStream = new FileInputStream(file);
-
-            URL url = new URL(urlTo);
-            connection = (HttpURLConnection) url.openConnection();
-
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
-            connection.setUseCaches(false);
-
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Connection", "Keep-Alive");
-            connection.setRequestProperty("User-Agent", "Android Multipart HTTP Client 1.0");
-            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-
-            outputStream = new DataOutputStream(connection.getOutputStream());
-            outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-            outputStream.writeBytes("Content-Disposition: form-data; name=\"" + filefield + "\"; filename=\"" + q[idx] + "\"" + lineEnd);
-            outputStream.writeBytes("Content-Type: " + fileMimeType + lineEnd);
-            outputStream.writeBytes("Content-Transfer-Encoding: binary" + lineEnd);
-
-            outputStream.writeBytes(lineEnd);
-
-            bytesAvailable = fileInputStream.available();
-            bufferSize = Math.min(bytesAvailable, maxBufferSize);
-            buffer = new byte[bufferSize];
-
-            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-            while (bytesRead > 0) {
-                outputStream.write(buffer, 0, bufferSize);
-                bytesAvailable = fileInputStream.available();
-                bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+        public static Retrofit getRetrofitClient(Context context) {
+            if (retrofit == null) {
+                HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+// set your desired log level
+                logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+                OkHttpClient.Builder okHttpClient = new OkHttpClient.Builder();
+                okHttpClient.readTimeout(1000, TimeUnit.SECONDS);
+                okHttpClient.connectTimeout(500, TimeUnit.SECONDS);
+                okHttpClient.addInterceptor(logging);
+                retrofit = new Retrofit.Builder()
+                        .baseUrl(BASE_URL)
+                        .client(okHttpClient.build())
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
             }
-
-            outputStream.writeBytes(lineEnd);
-
-            // Upload POST Data
-            Iterator<String> keys = parmas.keySet().iterator();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                String value = parmas.get(key);
-
-                outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-                outputStream.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"" + lineEnd);
-                outputStream.writeBytes("Content-Type: text/plain" + lineEnd);
-                outputStream.writeBytes(lineEnd);
-                outputStream.writeBytes(value);
-                outputStream.writeBytes(lineEnd);
-            }
-
-            outputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-
-            if (200 != connection.getResponseCode()) {
-                Log.e("Debug", "error: ");
-            }
-
-            inputStream = connection.getInputStream();
-
-            result = this.convertStreamToString(inputStream);
-
-            fileInputStream.close();
-            inputStream.close();
-            outputStream.flush();
-            outputStream.close();
-
-            return result;
-        } catch (Exception e) {
-            Log.e("Debug", "error: " + e.getMessage(), e);
+            return retrofit;
         }
-        return result;
+
     }
 
-    private String convertStreamToString(InputStream is) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
+    public interface UploadAPIs {
 
-        String line = null;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return sb.toString();
+        @Multipart
+        @POST("graphology/Applied")
+        Call<ResponseBody> uploadImage(@Header("accept") String type, @Part("email") RequestBody email, @Part("uniquekey") RequestBody uniqueKey, @Part MultipartBody.Part file1, @Part("file") RequestBody requestBody1, @Part MultipartBody.Part file2, @Part("file2") RequestBody requestBody2, @Part MultipartBody.Part file3, @Part("file3") RequestBody requestBody3);
     }
+
+
+    private void uploadToServer() {
+        Retrofit retrofit = NetworkClient.getRetrofitClient(this);
+        UploadAPIs uploadAPIs = retrofit.create(UploadAPIs.class);
+        //Create a file object using file path
+        File file1 = new File(imagePath1.replace("file://", ""));
+        File file2 = new File(imagePath2.replace("file://", ""));
+        File file3 = new File(imagePath3.replace("file://", ""));
+        //String email = "hkunta1@student.gsu.edu";
+        RequestBody emailBody = RequestBody.create(MediaType.parse("text/plain"), email);
+        //String uniqueKey = "000063404";
+        RequestBody uniqueKeyBody = RequestBody.create(MediaType.parse("text/plain"), uniqueIDText);
+        // Create a request body with file and image media type
+        RequestBody fileReqBody1 = RequestBody.create(MediaType.parse("image/*"), file1);
+        RequestBody fileReqBody2 = RequestBody.create(MediaType.parse("image/*"), file2);
+        RequestBody fileReqBody3 = RequestBody.create(MediaType.parse("image/*"), file3);
+        // Create MultipartBody.Part using file request-body,file name and part name
+        MultipartBody.Part part1 = MultipartBody.Part.createFormData("file", file1.getName(), fileReqBody1);
+        //Create request body with text description and text media type
+        RequestBody description1 = RequestBody.create(MediaType.parse("text/plain"), "image-type");
+        MultipartBody.Part part2 = MultipartBody.Part.createFormData("file2", file2.getName(), fileReqBody2);
+        //Create request body with text description and text media type
+        RequestBody description2 = RequestBody.create(MediaType.parse("text/plain"), "image-type");
+        MultipartBody.Part part3 = MultipartBody.Part.createFormData("file3", file3.getName(), fileReqBody3);
+        //Create request body with text description and text media type
+        RequestBody description3 = RequestBody.create(MediaType.parse("text/plain"), "image-type");
+        //
+        Call<ResponseBody> call = uploadAPIs.uploadImage("application/json", emailBody, uniqueKeyBody, part1, description1, part2, description2, part3, description3);
+        call.enqueue(new Callback<ResponseBody>() {
+
+            @Override
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Log.e(TAG, response.body().toString());
+                }
+                Log.e(TAG + "testing", response.message());
+                Log.e(TAG + "testing", String.valueOf(response.code()));
+                Log.e(TAG, response.raw().toString());
+                Log.e(TAG, response.body().toString());
+                Log.e(TAG, response.body().source().toString());
+
+                try {
+                    response.body().source().request(Long.MAX_VALUE); // Buffer the entire body.
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Buffer buffer = response.body().source().buffer();
+                String responseBodyString = buffer.clone().readString(Charset.forName("UTF-8"));
+                Log.e(TAG, responseBodyString);
+
+                Intent resultIntent = new Intent(UploadActivity.this, ResultsActivity.class);
+                resultIntent.putExtra("html", responseBodyString);
+                startActivity(resultIntent);
+
+
+            }
+
+
+            @Override
+            public void onFailure(Call call, Throwable t) {
+                t.printStackTrace();
+                Log.e(TAG, t.getMessage());
+            }
+        });
+    }
+
 
     private void loadProfile(String url, int REQUEST_IMAGE) {
 
@@ -386,13 +401,14 @@ public class UploadActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE1) {
             if (resultCode == Activity.RESULT_OK) {
                 Uri uri = data.getParcelableExtra("path");
-                //imagePath1 = ImageFilePath.getPath(UploadActivity.this, data.getData());
+
+
                 try {
                     // You can update this bitmap to your server
                     bitmap1 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
-
-                    //Log.e("image path", imagePath1);
+                    imagePath1 = uri.toString();
+                    Toast.makeText(UploadActivity.this, imagePath1, Toast.LENGTH_SHORT).show();
                     loadProfile(uri.toString(), REQUEST_IMAGE1);
 
                 } catch (IOException e) {
@@ -408,6 +424,7 @@ public class UploadActivity extends AppCompatActivity {
                     bitmap2 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
                     imagePath2 = uri.toString();
+                    Toast.makeText(UploadActivity.this, imagePath2, Toast.LENGTH_SHORT).show();
                     loadProfile(uri.toString(), REQUEST_IMAGE2);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -422,6 +439,7 @@ public class UploadActivity extends AppCompatActivity {
                     bitmap3 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
                     imagePath3 = uri.toString();
+                    Toast.makeText(UploadActivity.this, imagePath3, Toast.LENGTH_SHORT).show();
                     loadProfile(uri.toString(), REQUEST_IMAGE3);
 
                 } catch (IOException e) {

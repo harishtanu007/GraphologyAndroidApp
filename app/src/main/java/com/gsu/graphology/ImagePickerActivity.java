@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Log;
@@ -26,6 +27,7 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static androidx.core.content.FileProvider.getUriForFile;
@@ -48,8 +50,10 @@ public class ImagePickerActivity extends AppCompatActivity {
 
     private boolean lockAspectRatio = false, setBitmapMaxWidthHeight = false;
     private int ASPECT_RATIO_X = 16, ASPECT_RATIO_Y = 9, bitmapMaxWidth = 1000, bitmapMaxHeight = 1000;
-    private int IMAGE_COMPRESSION = 80;
-    public static String fileName;
+    private int IMAGE_COMPRESSION = 100;
+    //public static String fileName;
+
+    File photoFile = null;
 
     public interface PickerOptionListener {
         void onTakeCameraSelected();
@@ -117,12 +121,25 @@ public class ImagePickerActivity extends AppCompatActivity {
                     @Override
                     public void onPermissionsChecked(MultiplePermissionsReport report) {
                         if (report.areAllPermissionsGranted()) {
-                            fileName = System.currentTimeMillis() + ".jpg";
+                            //fileName = System.currentTimeMillis() + ".jpg";
                             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, getCacheImagePath(fileName));
                             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+
+                                try {
+                                    photoFile = createImageFile();
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
+                                if (photoFile != null) {
+                                    //takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, getCacheImagePath(fileName));
+                                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                                }
                             }
+
+//                            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+//                                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+//                            }
                         }
                     }
 
@@ -131,6 +148,19 @@ public class ImagePickerActivity extends AppCompatActivity {
                         token.continuePermissionRequest();
                     }
                 }).check();
+    }
+
+    String mCurrentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        File storageDir = Environment.getExternalStorageDirectory();
+        File image = File.createTempFile(
+                String.valueOf(System.currentTimeMillis()),  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 
     private void chooseImageFromGallery() {
@@ -154,12 +184,23 @@ public class ImagePickerActivity extends AppCompatActivity {
 
     }
 
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Log.e("Image path1",mCurrentPhotoPath);
+        File f = new File(mCurrentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQUEST_IMAGE_CAPTURE:
                 if (resultCode == RESULT_OK) {
-                    cropImage(getCacheImagePath(fileName));
+                    Uri myUri = Uri.fromFile(photoFile);
+                    galleryAddPic();
+                    cropImage(myUri);
                 } else {
                     setResultCancelled();
                 }
@@ -190,7 +231,8 @@ public class ImagePickerActivity extends AppCompatActivity {
     }
 
     private void cropImage(Uri sourceUri) {
-        Uri destinationUri = Uri.fromFile(new File(getCacheDir(), queryName(getContentResolver(), sourceUri)));
+        //Uri destinationUri = Uri.fromFile(new File(getCacheDir(), queryName(getContentResolver(), sourceUri)));
+        Uri destinationUri = sourceUri;
         UCrop.Options options = new UCrop.Options();
         options.setCompressionQuality(IMAGE_COMPRESSION);
 
@@ -200,7 +242,7 @@ public class ImagePickerActivity extends AppCompatActivity {
         options.setToolbarWidgetColor(ContextCompat.getColor(this, R.color.white));
 
         if (lockAspectRatio)
-            options.withAspectRatio(ASPECT_RATIO_X, ASPECT_RATIO_Y);
+            //options.withAspectRatio(ASPECT_RATIO_X, ASPECT_RATIO_Y);
 
         if (setBitmapMaxWidthHeight)
             options.withMaxResultSize(bitmapMaxWidth, bitmapMaxHeight);

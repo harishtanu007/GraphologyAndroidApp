@@ -25,6 +25,8 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -120,6 +122,13 @@ public class UploadActivity extends AppCompatActivity {
     private String imageName1;
     private String imageName2;
     private String imageName3;
+    private LinearLayout image_uploaded_view1;
+    private LinearLayout image_uploaded_view2;
+    private LinearLayout image_uploaded_view3;
+    private LinearLayout image_not_uploaded_view1;
+    private LinearLayout image_not_uploaded_view2;
+    private LinearLayout image_not_uploaded_view3;
+
 
     ProgressDialog progressDialog;
     String URL = "http://graphology.eastus.azurecontainer.io/graphology/Applied";
@@ -145,7 +154,15 @@ public class UploadActivity extends AppCompatActivity {
         uniqueID = findViewById(R.id.uniqueIDView);
         uploadBtn = findViewById(R.id.upload_btn);
         constraintLayout=findViewById(R.id.parentLayout);
+        image_uploaded_view1=findViewById(R.id.image_uploaded_view);
+        image_uploaded_view2=findViewById(R.id.image_uploaded_view2);
+        image_uploaded_view3=findViewById(R.id.image_uploaded_view3);
+        image_not_uploaded_view1=findViewById(R.id.image_not_uploaded_view);
+        image_not_uploaded_view2=findViewById(R.id.image_not_uploaded_view2);
+        image_not_uploaded_view3=findViewById(R.id.image_not_uploaded_view3);
         getSupportActionBar().setTitle("Upload Images");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         Intent intent = getIntent();
         email = intent.getStringExtra("emailID");
         uniqueIDText = intent.getStringExtra("uniqueID");
@@ -209,7 +226,10 @@ public class UploadActivity extends AppCompatActivity {
                 okHttpClient.readTimeout(1000, TimeUnit.SECONDS);
                 okHttpClient.connectTimeout(500, TimeUnit.SECONDS);
                 okHttpClient.addInterceptor(logging);
+                okHttpClient.retryOnConnectionFailure(true);
+
                 retrofit = new Retrofit.Builder()
+
                         .baseUrl(BASE_URL)
                         .client(okHttpClient.build())
                         .addConverterFactory(GsonConverterFactory.create())
@@ -220,8 +240,17 @@ public class UploadActivity extends AppCompatActivity {
 
     }
 
-    public interface UploadAPIs {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // handle arrow click here
+        if (item.getItemId() == android.R.id.home) {
+            finish(); // close this activity and return to preview activity (if there is any)
+        }
 
+        return super.onOptionsItemSelected(item);
+    }
+
+    public interface UploadAPIs {
         @Multipart
         @POST("graphology/Applied")
         Call<ResponseBody> uploadImage(@Header("accept") String type, @Part("email") RequestBody email, @Part("uniquekey") RequestBody uniqueKey, @Part MultipartBody.Part file1, @Part("file") RequestBody requestBody1, @Part MultipartBody.Part file2, @Part("file2") RequestBody requestBody2, @Part MultipartBody.Part file3, @Part("file3") RequestBody requestBody3);
@@ -229,6 +258,15 @@ public class UploadActivity extends AppCompatActivity {
 
 
     private void uploadToServer() {
+        final ProgressDialog progressDialog;
+        progressDialog = new ProgressDialog(UploadActivity.this);
+        //progressDialog.setMax(100);
+        progressDialog.setMessage("Calculating results");
+        progressDialog.setTitle("Please wait...");
+        //progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setCancelable(false);
+        // show it
+        progressDialog.show();
         Retrofit retrofit = NetworkClient.getRetrofitClient(this);
         UploadAPIs uploadAPIs = retrofit.create(UploadAPIs.class);
         //Create a file object using file path
@@ -259,6 +297,7 @@ public class UploadActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+
                 if (response.isSuccessful()) {
                     Log.e(TAG, response.body().toString());
                 }
@@ -275,10 +314,18 @@ public class UploadActivity extends AppCompatActivity {
                 }
                 Buffer buffer = response.body().source().buffer();
                 String responseBodyString = buffer.clone().readString(Charset.forName("UTF-8"));
-                Log.e(TAG, responseBodyString);
-
+                responseBodyString=responseBodyString.replace(getString(R.string.htmlheader),"");
+                //Log.e(TAG, responseBodyString);
+                int maxLogSize = 1000;
+                for(int i = 0; i <= responseBodyString.length() / maxLogSize; i++) {
+                    int start = i * maxLogSize;
+                    int end = (i+1) * maxLogSize;
+                    end = end > responseBodyString.length() ? responseBodyString.length() : end;
+                    Log.e(TAG, responseBodyString.substring(start, end));
+                }
                 Intent resultIntent = new Intent(UploadActivity.this, ResultsActivity.class);
                 resultIntent.putExtra("html", responseBodyString);
+                progressDialog.dismiss();
                 startActivity(resultIntent);
 
 
@@ -287,6 +334,7 @@ public class UploadActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call call, Throwable t) {
+                progressDialog.dismiss();
                 t.printStackTrace();
                 Log.e(TAG, t.getMessage());
             }
@@ -300,7 +348,9 @@ public class UploadActivity extends AppCompatActivity {
         if (REQUEST_IMAGE == REQUEST_IMAGE1) {
             imageName1 = url.substring(url.lastIndexOf('/') + 1, url.length());
             filename1.setText(url.substring(url.lastIndexOf('/') + 1, url.length()));
-            imgView1.setVisibility(View.VISIBLE);
+            filename1.setGravity(Gravity.LEFT|Gravity.START);
+            image_uploaded_view1.setVisibility(View.VISIBLE);
+            image_not_uploaded_view1.setVisibility(View.GONE);
             Glide.with(this).load(url)
                     .into(imgView1);
             imgView1.setColorFilter(ContextCompat.getColor(this, android.R.color.transparent));
@@ -308,16 +358,20 @@ public class UploadActivity extends AppCompatActivity {
         }
         if (REQUEST_IMAGE == REQUEST_IMAGE2) {
             imageName2 = url.substring(url.lastIndexOf('/') + 1, url.length());
+            filename2.setGravity(Gravity.LEFT|Gravity.START);
             filename2.setText(url.substring(url.lastIndexOf('/') + 1, url.length()));
-            imgView2.setVisibility(View.VISIBLE);
+            image_uploaded_view2.setVisibility(View.VISIBLE);
+            image_not_uploaded_view2.setVisibility(View.GONE);
             Glide.with(this).load(url)
                     .into(imgView2);
             imgView2.setColorFilter(ContextCompat.getColor(this, android.R.color.transparent));
         }
         if (REQUEST_IMAGE == REQUEST_IMAGE3) {
             imageName3 = url.substring(url.lastIndexOf('/') + 1, url.length());
+            filename3.setGravity(Gravity.LEFT|Gravity.START);
             filename3.setText(url.substring(url.lastIndexOf('/') + 1, url.length()));
-            imgView3.setVisibility(View.VISIBLE);
+            image_uploaded_view3.setVisibility(View.VISIBLE);
+            image_not_uploaded_view3.setVisibility(View.GONE);
             Glide.with(this).load(url)
                     .into(imgView3);
             imgView3.setColorFilter(ContextCompat.getColor(this, android.R.color.transparent));
@@ -408,7 +462,6 @@ public class UploadActivity extends AppCompatActivity {
                     bitmap1 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
                     imagePath1 = uri.toString();
-                    Toast.makeText(UploadActivity.this, imagePath1, Toast.LENGTH_SHORT).show();
                     loadProfile(uri.toString(), REQUEST_IMAGE1);
 
                 } catch (IOException e) {
@@ -424,7 +477,6 @@ public class UploadActivity extends AppCompatActivity {
                     bitmap2 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
                     imagePath2 = uri.toString();
-                    Toast.makeText(UploadActivity.this, imagePath2, Toast.LENGTH_SHORT).show();
                     loadProfile(uri.toString(), REQUEST_IMAGE2);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -439,7 +491,6 @@ public class UploadActivity extends AppCompatActivity {
                     bitmap3 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
                     imagePath3 = uri.toString();
-                    Toast.makeText(UploadActivity.this, imagePath3, Toast.LENGTH_SHORT).show();
                     loadProfile(uri.toString(), REQUEST_IMAGE3);
 
                 } catch (IOException e) {

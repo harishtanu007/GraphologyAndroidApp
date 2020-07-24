@@ -25,6 +25,7 @@ import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.yalantis.ucrop.UCrop;
+import com.yalantis.ucrop.model.AspectRatio;
 
 import java.io.File;
 import java.io.IOException;
@@ -237,13 +238,17 @@ public class ImagePickerActivity extends AppCompatActivity {
         options.setCompressionQuality(IMAGE_COMPRESSION);
 
         // applying UI theme
+        //options.setAspectRatioOptions(1,new AspectRatio(null, 1, 1));
         options.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         options.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         options.setToolbarWidgetColor(ContextCompat.getColor(this, R.color.white));
 
+
         if (lockAspectRatio)
             //options.withAspectRatio(ASPECT_RATIO_X, ASPECT_RATIO_Y);
-
+        //options.setFreeStyleCropEnabled(true);
+        //options.setShowCropGrid(true);
+        options.setHideBottomControls(true);
         if (setBitmapMaxWidthHeight)
             options.withMaxResultSize(bitmapMaxWidth, bitmapMaxHeight);
 

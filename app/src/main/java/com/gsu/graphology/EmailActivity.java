@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -48,6 +49,8 @@ public class EmailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_email);
 
+
+
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
@@ -56,6 +59,8 @@ public class EmailActivity extends AppCompatActivity {
         submitEmailBtn = findViewById(R.id.submit_email_btn);
         emailAddressInput = findViewById(R.id.editTextEmailAddress);
         getSupportActionBar().setTitle("SAMPLE SUBMISSION");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         submitEmailBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,6 +76,16 @@ public class EmailActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // handle arrow click here
+        if (item.getItemId() == android.R.id.home) {
+            finish(); // close this activity and return to preview activity (if there is any)
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     public void checkEmail(View view){
@@ -100,6 +115,7 @@ public class EmailActivity extends AppCompatActivity {
             dialog = new ProgressDialog(EmailActivity.this);
             dialog.setTitle("Please wait");
             dialog.setMessage("Checking your details");
+            dialog.setCancelable(false);
             dialog.show();
         }
 

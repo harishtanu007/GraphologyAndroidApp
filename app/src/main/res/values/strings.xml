@@ -16,4 +16,98 @@
     <string name="go_to_settings">GOTO SETTINGS</string>
     <string name="lbl_take_camera_picture">Take a picture</string>
     <string name="lbl_choose_from_gallery">Choose from gallery</string>
+    <string name="htmlheader"><![CDATA[<nav class="navbar navbar-expand-lg navbar-light bg-white" style="padding-right: 0px;margin: 0px;">
+
+  <a id="BrandDesktop" href="index">
+    <img src="../static/images/Georgia_State_University-logo.png" width="206" height="28" class="d-inline-block align-top">
+  </a>
+
+  <div id="BrandMobile">
+    <a href="index">
+      <img class="brand" border="0" alt="GSULogo"
+        src="../static/images/Georgia_State_University-logo.png" /></a>
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav"
+    aria-expanded="false">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav mr-auto ml-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="index">
+          <font color="#467095"><b>
+              <center>Home</center>
+            </b></font><span class="sr-only">(current)</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="About">
+          <font color="#467095"><b>
+              <center>About</center>
+            </b></font>
+        </a>
+      </li>
+      <!-- <li class="nav-item dropdown">
+        <a href="REU2019_Projects.html" class="nav-link" data-toggle="dropdown">
+          <font color="#467095"><b>
+              <center>REU:2019</center>
+            </b></font>
+        </a>
+        <div class="dropdown-menu">
+          <a href="REU2019_Projects.html" class="dropdown-item">
+            <font><b>Projects</b></font>
+          </a>
+          <a href="REU2019_Schedule.html" class="dropdown-item">
+            <font><b>Schedule</b></font>
+          </a>
+          <a href="REU2019_Gallery.html" class="dropdown-item">
+            <font><b>Gallery</b></font>
+          </a>
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a href="REU2020_Projects.html" class="nav-link" data-toggle="dropdown">
+          <font color="#467095"><b>
+              <center>REU:2020</center>
+            </b></font>
+        </a>
+        <div class="dropdown-menu">
+          <a href="REU2020_Projects.html" class="dropdown-item">
+            <font><b>Projects</b></font>
+          </a>
+          <a href="REU2020_Schedule.html" class="dropdown-item">
+            <font><b>Schedule</b></font>
+          </a>
+          <a href="workshopInfo.html" class="dropdown-item">
+            <font><b>Workshop</b></font>
+        </a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="Mentors.html">
+          <font color="#467095"><b>
+              <center>Mentors</center>
+            </b></font>
+        </a>
+      </li> -->
+      <li class="nav-item">
+        <a class="nav-link" href="Contact">
+          <font color="#467095"><b>
+              <center>Contact Us</center>
+            </b></font>
+        </a>
+      </li>
+      <!-- <li class="nav-item">
+        <a class="nav-link" href="ApplyNow.html">
+          <font color="#467095"><b>
+              <center>Submit Sample</center>
+            </b></font>
+        </a>
+      </li> -->
+  </div>
+
+
+
+</nav>]]></string>
 </resources>

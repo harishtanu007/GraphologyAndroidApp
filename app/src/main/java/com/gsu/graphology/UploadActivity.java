@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -179,7 +180,7 @@ public class UploadActivity extends AppCompatActivity {
         // Clearing older images from cache directory
         // don't call this line if you want to choose multiple images in the same activity
         // call this once the bitmap(s) usage is over
-        ImagePickerActivity.clearCache(this);
+        //ImagePickerActivity.clearCache(this);
 
         layout1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -461,8 +462,8 @@ public class UploadActivity extends AppCompatActivity {
                     // You can update this bitmap to your server
                     bitmap1 = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                     // loading profile image from local cache
-                    imagePath1 = uri.toString();
-                    loadProfile(uri.toString(), REQUEST_IMAGE1);
+                    imagePath1 = uri.getPath();
+                    loadProfile(uri.getPath(), REQUEST_IMAGE1);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -500,6 +501,13 @@ public class UploadActivity extends AppCompatActivity {
         }
     }
 
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
     /**
      * Showing Alert Dialog with Settings option
      * Navigates user to app settings

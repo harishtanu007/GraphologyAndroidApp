@@ -167,7 +167,6 @@ public class ImagePickerActivity extends AppCompatActivity {
                                             photoFile);
                                     //takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, getCacheImagePath(fileName));
                                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                                    Toast.makeText(ImagePickerActivity.this, "Here", Toast.LENGTH_SHORT).show();
                                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                                 }
                             }
@@ -284,7 +283,6 @@ public class ImagePickerActivity extends AppCompatActivity {
                     }
                     mCurrentPhotoPath=out.getAbsolutePath();
                     Uri myUri = Uri.fromFile(out);
-                    Toast.makeText(ImagePickerActivity.this, String.valueOf(myUri), Toast.LENGTH_SHORT).show();
                     galleryAddPic();
                     cropImage(myUri);
                 } else {
@@ -294,8 +292,6 @@ public class ImagePickerActivity extends AppCompatActivity {
             case REQUEST_GALLERY_IMAGE:
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
-                    Toast.makeText(ImagePickerActivity.this, String.valueOf(data.getData()), Toast.LENGTH_SHORT).show();
-                    //CropImage.activity(imageUri).setAspectRatio(1, 1).start(this);
                     cropImage(imageUri);
                 } else {
                     setResultCancelled();
@@ -313,10 +309,8 @@ public class ImagePickerActivity extends AppCompatActivity {
                 break;
             case UCrop.REQUEST_CROP:
                 if (resultCode == RESULT_OK) {
-                    Toast.makeText(ImagePickerActivity.this, "result okay", Toast.LENGTH_SHORT).show();
                     handleUCropResult(data);
                 } else {
-                    Toast.makeText(ImagePickerActivity.this, "result not okay", Toast.LENGTH_SHORT).show();
                     setResultCancelled();
                 }
                 break;
@@ -359,12 +353,11 @@ public class ImagePickerActivity extends AppCompatActivity {
 
     private void handleUCropResult(Intent data) {
         if (data == null) {
-            Toast.makeText(this, "null data", Toast.LENGTH_SHORT).show();
+
             setResultCancelled();
             return;
         }
         final Uri resultUri = UCrop.getOutput(data);
-        Toast.makeText(this, resultUri.toString(), Toast.LENGTH_SHORT).show();
         setResultOk(resultUri);
     }
 

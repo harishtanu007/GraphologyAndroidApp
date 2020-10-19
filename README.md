@@ -49,8 +49,14 @@ Results Page:
 
 
 
-References:
+## References:
 Github Link: https://github.com/harishtanu007/GraphologyAndroidApp
 Website: http://graphology.eastus.azurecontainer.io/graphology/index
 
+## Built With
 
+* [Android Studio](https://developer.android.com/studio) - Android Development tool
+
+## Authors
+
+* **Harish Kunta** - *Initial work* - [Harish Kunta](https://github.com/harishtanu007)
